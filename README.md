@@ -245,18 +245,7 @@ Before we start talking about the best practices, lets try to understand some of
 
 ## Response
 
-1. __Wrap API response into a `data` container object__
-
-   //TODO
-2. __Include `status` section in the response__
-
-   //TODO
-      
-3. __Include `errors` section in the response__
-
-   //TODO
-
-4. __User Http Status codes__
+1. __Use Http Status codes to send the request status__
 
    The HTTP standard provides over 70 status codes to describe the return values. Most of the APIs would need to dela with below: 
    
@@ -272,10 +261,74 @@ Before we start talking about the best practices, lets try to understand some of
    - _422 (Unprocessable Resource)_: 
    - _500 (Internal Server Error)_: 
    - _501 (Not Implemented)_: To indicate the server does not support the functionality required to fulfill the request. 
+   
+   
+2. __Wrap API response into a `data` container object__
+
+   It is a good practice to wrap the response data into a container object like `data`
+   ```json
+    {
+      "status": {
+   
+      },
+      "errors": null,
+      "data": {
+        "id": 1234,
+        "firstName": "James",
+        "lastName": "Bond",
+        "email": "james.bond@007.com"
+      }
+    }
+   ```
+   
+3. __Include `status` section in the response__
+
+   It is a good practice to include `status` object in the response body along with the standard http status codes.
+   
+   ```json
+   {
+     "status": {
+       "code": 400,
+       "message": "Bad Request"
+     },
+     "errors": [],
+     "data": null
+   }
+   ```
+      
+4. __Include `errors` section in the response__
+
+   It is a good practice to return the list of errors in the response body along with the http status codes. 
+   Use an object like `errors` to pass on the errors.
+   
+   ```json
+   {
+    "status": {
+      "code": 201,
+      "message": "User Created Successfully"
+    },
+    "errors": [ 
+       {
+         "code": "ERR001",
+         "description": "Validation Error",
+         "target": "Email Address"
+       }
+     ],
+     "data": null
+    }
+   ```
 
 5. __Distinguish `Errors` and `Faults`__
 
-   //TODO
+   - _Errors_: Classified as client passing an invalid data and the API is _correctly_ rejecting that data.
+   
+      Errors do not contribute to the overall API availability. These are typically `4XX` errors.
+      
+      Examples include invalid format, missing required params, invalid path, method not supported, invalid credentials etc..
+      
+   - _Faults_: Classified as API failing to correctly return response to a valid request.
+   
+      Faults to contribute to the overall API availability. These are typically `5XX` errors.
 
 6. __Use Pagination where required__
 
@@ -287,7 +340,7 @@ Before we start talking about the best practices, lets try to understand some of
 
 1. __Use `POST` to create resources__
 
-   //TODO
+   When creating new resources, `POST` should be used.
 
 2. __Allow to creating a collection of resources instead of one in a single request__
 
@@ -416,6 +469,71 @@ Before we start talking about the best practices, lets try to understand some of
    
 2. __Use HATEOS to represent pagination data__
 
+   Use HATEOS to pass along the links to the pages for the client to navigate the pages easily. 
+   Send pre-built links to next, prev, current, first, last pages. 
+   
+   **Response:**
+      ```json
+      {
+      "status": {
+         "code": 200,
+         "message": "Operation successful"
+      },
+      "errors": null,
+      "data":[
+        {
+          "id": 1234,
+          "firstName": "James",
+          "lastName": "Bond",
+          "email": "james.bond@007.com",
+          "links": [
+            {
+            "rel": "self",
+            "href": "http://host:port/xyz/students/1234"
+            }
+          ]
+        },
+        {
+          "id": 1235,
+          "firstName": "James",
+          "lastName": "Cooper",
+          "email": "james.cooper@007.com",
+          "links": [
+            {
+            "rel": "self",
+            "href": "http://host:port/xyz/students/1235"
+            }
+          ]
+        }
+      ],
+      "links": [
+         {
+            "rel": "self",
+            "href": "http://host:port/xyz/students?page=5&count=20"
+         },
+         {
+            "rel": "prev",
+            "href": "http://host:port/xyz/students?page=4&count=20"
+         },
+         {
+            "rel": "next",
+            "href": "http://host:port/xyz/students?page=6&count=20"
+         },
+         {
+            "rel": "first",
+            "href": "http://host:port/xyz/students?page=1&count=20"
+         },
+         {
+            "rel": "last",
+            "href": "http://host:port/xyz/students?page=121&count=20"
+         }
+       ]
+      }
+      ```
+
+3. __Use `meta` fields to to indicate the information on the results.
+
+   It is also a good practice to include the meta fields like `number of records` `page number` `offset` etc. in the response along with the results.
 
 ## Updating Resources
 
