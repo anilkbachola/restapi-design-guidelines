@@ -1,7 +1,9 @@
-# REST API Design Guidelines
+# REST API Design Best Practices
 
 This is an effort to summarize the best practices to follow in designing the RESTful APIs. 
-The list is not comprehensive, most of the items are stemmed from experience and industry acceptance.
+The list is not comprehensive, most of the items are stemmed from experience and industry acceptance. 
+
+Examples in this document, uses `json` as the content type, but they also applies to other content types. 
 
 ## Terminology
 
@@ -61,7 +63,7 @@ Before we start talking about the best practices, lets try to understand some of
    Is the data that is sent along with a request.
 
 
-## Resource URLs
+## Resource Representation (Resource URLs)
 
 1. __Make sure to have a unique identifier for each `Resource`__
 
@@ -106,8 +108,14 @@ Before we start talking about the best practices, lets try to understand some of
    - /courses/101/students
    - /courses/101/students/1000
    ```
-4. __Use HTTP Verbs to represent an action on a resource. Do not use actions names in URLs__
+4. __Use HTTP Verbs to represent an action on a resource. Do not use action names in URLs__
 
+    POST - create a resource
+    GET - retrieve a resource
+    PUT - update a resource (by replacing it with a new version)*
+    PATCH - update part of a resource (if available and appropriate)*
+    DELETE - remove a resource
+    
    **Examples:**
    ```text
     - POST /students   -> to Create one/more Student resource in collection.
@@ -164,8 +172,51 @@ Before we start talking about the best practices, lets try to understand some of
    ```
 7. __How about actions that does not fit into simple CRUD operations__
 
-   //TODO
-
+    Some operations like below can not be mapped to world of CRUD and to a particular resource.
+        - login
+        - logout
+        - print
+        - transfer funds
+        - cancel a booking
+       
+    So, how to represent the endpoints for these operations? Recommended:
+    
+    - First, try to see if the action can fit on to an existing resource or there is a need for new resource.
+         
+    For example, `cancel a booking` can be mapped to a `booking` resource and `transfer funds` can be mapped on to a `accounts` resource.
+         
+     ```text
+       -- to cancel a booking
+       DELETE /bookings/101  
+       PUT /bookings/101
+       
+       -- to transfer funds from one account to another, and also gives options to extend with other services
+       POST /accounts/100?service=transfer
+       POST /accounts/100?service=statements    
+    
+     ```
+    - If not, try to designate a 'controller' resource for each operation.
+      
+      For example `login` and `logout` can be mapped to a URI like below
+        
+      ```text
+        // we are trying to group login and logout on to a `auth`.
+        POST /auth/login
+        POST /auth/logout
+    
+        or
+     
+        POST /auth?action=login
+        POST /auth?action=logout
+    
+      ```
+      A `transfer of funds` and `print` can be grouped in to a `servces` endpoint.
+        
+      ```text
+        POST /services/print
+        POST /services/transfer
+      ```
+        
 8. __How about retrieving multiple resources in single GET__
 
    A multi-resource search does not really make sense to be applied to a specific resource's endpoint.
@@ -178,8 +229,9 @@ Before we start talking about the best practices, lets try to understand some of
    Use major version in the URL. Optionally represent minor version using headers.
    ```text
    POST /api/v1/students/
+   POST /api/v1.0/students/
 
-   POST /api/v2/students/
+   POST /api/v2.1/students/
    ```
 
    If your API changes frequently, use an HTTP header to represent the minor version. 
@@ -191,10 +243,10 @@ Before we start talking about the best practices, lets try to understand some of
    ```
 10. __When to use `Path Params` vs `Request Params`__
 
-   Best practice for RESTful API design is that path params are used to identify a specific resource or resources, while query parameters are used to sort/filter those resources. 
+   Path params are used to identify a specific resource or resources, while query parameters are used to sort/filter those resources. 
+   And also paths tend to be cached, parameters tend to not be.
    
-   In a one liner, Paths tend to be cached, parameters tend to not be. 
-   It is recommended putting any required parameters in the path, and any optional parameters should certainly be query string parameters. 
+   It is recommended to use any required parameters in the path, and any optional parameters should certainly be query string parameters. 
    Putting optional parameters in the URL will end up getting really messy when trying to write URL handlers that match different combinations.
 
 ## Request
@@ -241,6 +293,11 @@ Before we start talking about the best practices, lets try to understand some of
 
    //TODO
 
+2. __Always return meaningful error codes and/or messages__
+
+   //TODO
+   
+
 
 
 ## Response
@@ -262,7 +319,22 @@ Before we start talking about the best practices, lets try to understand some of
    - _500 (Internal Server Error)_: 
    - _501 (Not Implemented)_: To indicate the server does not support the functionality required to fulfill the request. 
    
+2. __Have all APIs to return consistent response format__
+
+   This will enable the client to look up for information in the response in a uniform and consistent way. 
    
+   You can come up with your own standard response format, below is an example. 
+   
+   ```json
+    {
+      "status": null,
+      "errors": null,
+      "meta": null,
+      "data": null,
+      "links": null
+    }
+   ```
+
 2. __Wrap API response into a `data` container object__
 
    It is a good practice to wrap the response data into a container object like `data`
@@ -388,7 +460,7 @@ Before we start talking about the best practices, lets try to understand some of
    ]
    ```
 
-4. Return the created / modified state as response of create or update response.
+4. __Return the created / modified state as response of create or update response.__
 
    Its always useful and specific cases like the resource 'id' which the client need later to lookup the created resource.
 
@@ -425,7 +497,7 @@ Before we start talking about the best practices, lets try to understand some of
    ]
    ```
 
-5. Use HATEOS to return the newly created resource URL.
+5. __Use HATEOS to return the newly created resource URL.__
 
    Which helps the clients to navigate and locate the resource easily.
 
@@ -531,9 +603,10 @@ Before we start talking about the best practices, lets try to understand some of
       }
       ```
 
-3. __Use `meta` fields to to indicate the information on the results.
+3. __Use `meta` fields to to indicate the information on the results__
 
    It is also a good practice to include the meta fields like `number of records` `page number` `offset` etc. in the response along with the results.
+
 
 ## Updating Resources
 
