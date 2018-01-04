@@ -173,11 +173,11 @@ Before we start talking about the best practices, lets try to understand some of
 7. __How about actions that does not fit into simple CRUD operations__
 
     Some operations like below can not be mapped to world of CRUD and to a particular resource.
-        - login
-        - logout
-        - print
-        - transfer funds
-        - cancel a booking
+    - login
+    - logout
+    - print
+    - transfer funds
+    - cancel a booking
        
     So, how to represent the endpoints for these operations? Recommended:
     
@@ -304,7 +304,15 @@ Before we start talking about the best practices, lets try to understand some of
 
 1. __Use Http Status codes to send the request status__
 
-   The HTTP standard provides over 70 status codes to describe the return values. Most of the APIs would need to dela with below: 
+   The HTTP standard provides over 70 status codes to describe the return values. They can be grouped as below:
+   
+   - _1XX_: Informational
+   - _2XX_: Successful
+   - _3XX_: Redirection
+   - _4XX_: Client Error
+   - _5XX_: Server Error
+   
+   Most of the APIs would need to deal with the below codes: 
    
    - _200 (OK)_: To indicate that the request is succeeded.
    - _201 (Created)_: To indicate resource `created` successfully
